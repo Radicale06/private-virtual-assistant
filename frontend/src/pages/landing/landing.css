@@ -1,0 +1,143 @@
+/* ---------------------------------------------------------------------------
+   Landing-only theme  vibrant aurora (violet → fuchsia → cyan on deep slate).
+   Scoped to .landing-root so it never touches the dashboard's token palette.
+   Palette (ui-ux-pro-max): #7C3AED violet · #6366F1 indigo · #D946EF fuchsia
+   · #22D3EE cyan · #0F172A bg · #192134 card. Fonts: Space Grotesk + DM Sans.
+--------------------------------------------------------------------------- */
+.landing-root {
+  --aurora-violet: #7c3aed;
+  --aurora-indigo: #6366f1;
+  --aurora-fuchsia: #d946ef;
+  --aurora-cyan: #22d3ee;
+  --ink: #0b1020;
+  --ink-2: #0f172a;
+  --card: rgba(255, 255, 255, 0.04);
+  --hairline: rgba(255, 255, 255, 0.10);
+
+  position: relative;
+  min-height: 100%;
+  background: var(--ink);
+  color: #f8fafc;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing-root h1,
+.landing-root h2,
+.landing-root h3,
+.landing-root .font-display {
+  font-family: "Space Grotesk", "DM Sans", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Aurora gradient text */
+.aurora-text {
+  background: linear-gradient(
+    100deg,
+    var(--aurora-cyan),
+    var(--aurora-violet) 45%,
+    var(--aurora-fuchsia)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Glass surface */
+.glass {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Animated aurora blobs behind the hero */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  will-change: transform;
+  pointer-events: none;
+}
+.aurora-blob.drift-a { animation: drift-a 18s ease-in-out infinite; }
+.aurora-blob.drift-b { animation: drift-b 22s ease-in-out infinite; }
+.aurora-blob.drift-c { animation: drift-c 26s ease-in-out infinite; }
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.12); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-50px, 30px) scale(0.95); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 40px) scale(1.15); }
+}
+
+/* Subtle vertical float for glass chat bubbles */
+.float-y { animation: float-y 6s ease-in-out infinite; will-change: transform; }
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Logo / integration marquee */
+.marquee {
+  display: flex;
+  gap: 3rem;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+.marquee-track:hover .marquee { animation-play-state: paused; }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Conic glow ring used on the pricing highlight + CTA */
+.glow-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 180deg,
+    var(--aurora-cyan),
+    var(--aurora-violet),
+    var(--aurora-fuchsia),
+    var(--aurora-cyan)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Grid backdrop */
+.grid-fade {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* Anchor offset for the fixed nav + smooth in-page scroll (motion-safe). */
+.landing-root section[id] { scroll-margin-top: 88px; }
+html:has(.landing-root) { scroll-behavior: smooth; }
+
+/* Honor reduced motion  kill all decorative motion. */
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing-root) { scroll-behavior: auto; }
+  .landing-root .aurora-blob,
+  .landing-root .float-y,
+  .landing-root .marquee {
+    animation: none !important;
+  }
+}

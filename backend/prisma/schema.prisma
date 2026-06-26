@@ -1,0 +1,249 @@
+// PVA data layer  Prisma schema (prisma-client-py, asyncio).
+// `prisma db push` to sync in dev; `prisma migrate` for production.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+  recursive_type_depth = 5
+}
+
+// ---------------------------------------------------------------- enums
+enum UserRole {
+  user // the customer who owns one assistant
+  admin // the platform operator (monitoring / back office)
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum PlanTier {
+  free
+  pro
+  team
+}
+
+enum AgentStatus {
+  draft
+  active
+  error
+}
+
+enum IntegrationProvider {
+  google_calendar
+  gmail
+  calendly
+  zoom
+  google_meet
+  outlook_calendar
+  outlook_mail
+  microsoft_teams
+}
+
+enum IntegrationStatus {
+  connected
+  disconnected
+  error
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageRole {
+  user
+  assistant
+  tool
+  system
+}
+
+enum MessageType {
+  text
+  voice
+  action
+  template
+}
+
+enum JobType {
+  reminder
+  briefing
+}
+
+enum JobStatus {
+  pending
+  sent
+  failed
+  cancelled
+}
+
+// ---------------------------------------------------------------- models
+model User {
+  id                 String     @id @default(uuid()) @db.Uuid
+  email              String     @unique
+  hashed_password    String?
+  full_name          String?
+  role               UserRole   @default(user)
+  status             UserStatus @default(active)
+  plan               PlanTier   @default(free)
+  timezone           String     @default("UTC")
+  stripe_customer_id String?
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+
+  agent      Agent?
+  audit_logs AuditLog[]
+
+  @@map("users")
+}
+
+model Agent {
+  id                       String      @id @default(uuid()) @db.Uuid
+  user_id                  String      @unique @db.Uuid
+  user                     User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name                     String      @default("Assistant")
+  tone                     String      @default("concise & professional")
+  status                   AgentStatus @default(draft)
+  confirm_before_send      Boolean     @default(true)
+  morning_briefing_enabled Boolean     @default(false)
+  morning_briefing_time    String? // "HH:MM" local to the user's timezone
+  work_start               String? // "HH:MM"
+  work_end                 String? // "HH:MM"
+  created_at               DateTime    @default(now())
+  updated_at               DateTime    @updatedAt
+
+  integrations   AgentIntegration[]
+  linking_tokens LinkingToken[]
+  identities     WhatsAppIdentity[]
+  messages       Message[]
+  memories       AgentMemory[]
+  conv_state     ConversationState?
+  jobs           Job[]
+
+  @@map("agents")
+}
+
+model AgentIntegration {
+  id            String              @id @default(uuid()) @db.Uuid
+  agent_id      String              @db.Uuid
+  agent         Agent               @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  provider      IntegrationProvider
+  status        IntegrationStatus   @default(connected)
+  account_email String?
+  scopes        Json?
+  token_blob    String? // encrypted OAuth token bundle (see core.encryption)
+  last_error    String?
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+
+  @@unique([agent_id, provider])
+  @@map("agent_integrations")
+}
+
+model LinkingToken {
+  token      String    @id
+  agent_id   String    @db.Uuid
+  agent      Agent     @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  @@map("linking_tokens")
+}
+
+model WhatsAppIdentity {
+  phone_number    String    @id
+  agent_id        String    @db.Uuid
+  agent           Agent     @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  display_name    String?
+  last_inbound_at DateTime?
+  blocked         Boolean   @default(false)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([agent_id])
+  @@map("whatsapp_identities")
+}
+
+model Message {
+  id              String           @id @default(uuid()) @db.Uuid
+  agent_id        String           @db.Uuid
+  agent           Agent            @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  wa_message_id   String?          @unique // idempotency for inbound webhook retries
+  direction       MessageDirection
+  role            MessageRole
+  type            MessageType      @default(text)
+  content         String?
+  payload         Json?
+  tokens          Int?
+  cost_usd_micros Int?
+  created_at      DateTime         @default(now())
+
+  @@index([agent_id, created_at])
+  @@map("messages")
+}
+
+model AgentMemory {
+  id         String   @id @default(uuid()) @db.Uuid
+  agent_id   String   @db.Uuid
+  agent      Agent    @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  key        String
+  value      String
+  source     String   @default("agent") // agent | user
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([agent_id, key])
+  @@map("agent_memory")
+}
+
+model ConversationState {
+  id                            String    @id @default(uuid()) @db.Uuid
+  agent_id                      String    @unique @db.Uuid
+  agent                         Agent     @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  summary_text                  String?
+  summarized_through_message_at DateTime?
+  working_token_count           Int       @default(0)
+  updated_at                    DateTime  @updatedAt
+
+  @@map("conversation_state")
+}
+
+model Job {
+  id            String    @id @default(uuid()) @db.Uuid
+  agent_id      String    @db.Uuid
+  agent         Agent     @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  type          JobType
+  status        JobStatus @default(pending)
+  run_at        DateTime
+  title         String?
+  payload       Json?
+  celery_task_id String?
+  last_error    String?
+  sent_at       DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@index([status, run_at])
+  @@map("jobs")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actor_id    String?  @db.Uuid
+  actor       User?    @relation(fields: [actor_id], references: [id], onDelete: SetNull)
+  action      String
+  target_type String?
+  target_id   String?
+  detail      Json?
+  created_at  DateTime @default(now())
+
+  @@index([action])
+  @@map("audit_logs")
+}
