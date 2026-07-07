@@ -33,7 +33,7 @@ export function PlatformLayout() {
         {/* top bar */}
         <header className="flex items-center justify-between border-b border-border bg-surface px-8 py-4">
           <div className="flex items-center gap-2 text-sm">
-            <span className="flex items-center gap-1.5 rounded-full border border-danger/30 bg-danger-muted px-3 py-1 font-medium text-danger">
+            <span className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-muted px-3 py-1 font-medium text-primary">
               <Shield className="h-3.5 w-3.5" />
               Platform Console
             </span>

@@ -37,7 +37,9 @@
   --color-secondary-foreground: #374151;
 
   --color-muted: #e5e7eb;
-  --color-muted-foreground: #9ca3af;
+  /* Secondary text. Was #9ca3af (2.5:1 on white — fails WCAG AA); #5b616e is
+     ~5.6:1 on surface and ~5.3:1 on the tinted page bg, clearing AA as body. */
+  --color-muted-foreground: #5b616e;
 
   --color-success: #16a34a;
   --color-success-muted: #dcfce7;
@@ -50,6 +52,15 @@
   --color-sidebar-foreground: #374151;
   --color-sidebar-active: #eef2ff;
   --color-sidebar-active-foreground: #4f46e5;
+
+  /* Categorical chart palette — for data-viz series/categories that carry NO
+     status meaning (cost by model, metric trend lines). Kept deliberately in a
+     cool→violet family clear of success/warning/danger so the semantic colors
+     stay reserved for health and state. chart-1 echoes the brand indigo. */
+  --color-chart-1: oklch(0.53 0.2 277); /* indigo (brand) */
+  --color-chart-2: oklch(0.62 0.15 248); /* blue */
+  --color-chart-3: oklch(0.66 0.1 205); /* teal */
+  --color-chart-4: oklch(0.58 0.19 325); /* violet */
 }
 
 html,
@@ -64,4 +75,90 @@ body {
   color: var(--color-foreground);
   font-size: var(--text-base);
   -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. Product register: motion conveys state (loading, reveal, feedback),
+   never page-load choreography. Durations stay short; easing is ease-out only.
+--------------------------------------------------------------------------- */
+:root {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A value/region settling in once its skeleton resolves. One-shot, present by
+   default (ends visible), so headless/hidden-tab renders never ship blank. */
+.anim-settle {
+  animation: settle-in 240ms var(--ease-out-quart) both;
+}
+
+/* Sparkline: the line strokes itself in, area fades up under it. pathLength=1
+   on the <path> lets the dash math be length-independent. */
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.spark-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 700ms var(--ease-out-expo) forwards;
+}
+@keyframes fade-only {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.spark-area {
+  animation: fade-only 700ms var(--ease-out-quart) both;
+}
+
+/* Transient "Updated" confirmation after a refresh. */
+@keyframes confirm-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  15%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+.anim-confirm {
+  animation: confirm-in 2000ms var(--ease-out-quart) forwards;
+}
+
+/* Reduced motion: every animation collapses to its resting, fully-visible end
+   state — the loading/feedback signals stay legible, just still. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin,
+  .anim-settle,
+  .spark-area,
+  .anim-confirm {
+    animation: none;
+  }
+  .spark-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }

@@ -316,7 +316,7 @@ export function Home() {
   const [activity, setActivity] = useState<ActivityOut[]>([]);
   const [integrations, setIntegrations] = useState<IntegrationOut[]>([]);
   const [billing, setBilling] = useState<BillingSummary | null>(null);
-  const [agentName, setAgentName] = useState("Aria");
+  const [agentName, setAgentName] = useState("Musaed");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

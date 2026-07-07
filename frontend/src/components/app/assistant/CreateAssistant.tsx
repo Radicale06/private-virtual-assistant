@@ -4,13 +4,13 @@ import { api } from "../../../lib/api";
 import { Card } from "../../ui/Card";
 
 export function CreateAssistant({ onCreated }: { onCreated: () => void }) {
-  const [name, setName] = useState("Aria");
+  const [name, setName] = useState("Musaed");
   const [busy, setBusy] = useState(false);
 
   async function create() {
     setBusy(true);
     try {
-      await api.updateAgent({ name: name.trim() || "Aria" });
+      await api.updateAgent({ name: name.trim() || "Musaed" });
       onCreated();
     } finally {
       setBusy(false);

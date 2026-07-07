@@ -55,10 +55,10 @@ export const SAMPLE = {
     revenueToday: 496.0,
     margin: 92.3,
     rows: [
-      { label: "GPT-4o (main)", value: 22.1, pct: 58, color: "var(--color-primary)" },
-      { label: "GPT-4o mini (routing)", value: 9.4, pct: 24, color: "var(--color-success)" },
-      { label: "o1 (reasoning)", value: 4.8, pct: 13, color: "var(--color-warning)" },
-      { label: "Whisper (transcription)", value: 1.9, pct: 5, color: "var(--color-danger)" },
+      { label: "GPT-4o (main)", value: 22.1, pct: 58, color: "var(--color-chart-1)" },
+      { label: "GPT-4o mini (routing)", value: 9.4, pct: 24, color: "var(--color-chart-2)" },
+      { label: "o1 (reasoning)", value: 4.8, pct: 13, color: "var(--color-chart-3)" },
+      { label: "Whisper (transcription)", value: 1.9, pct: 5, color: "var(--color-chart-4)" },
     ],
   },
 };

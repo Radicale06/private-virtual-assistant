@@ -1,5 +1,4 @@
 import { motion, useScroll, useSpring } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { roleHome, useAuth } from "../../lib/auth";
@@ -38,10 +37,8 @@ export function Nav() {
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <a href="#top" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-cyan-400">
-              <Sparkles className="h-4 w-4 text-white" />
-            </span>
-            <span className="font-display text-lg font-semibold text-white">Aria</span>
+            <img src="/logos/Musaed.png" alt="Musaed" className="h-10 w-10 object-contain" />
+            <span className="font-display text-xl font-semibold text-white">Musaed</span>
           </a>
 
           <div className="hidden items-center gap-8 md:flex">

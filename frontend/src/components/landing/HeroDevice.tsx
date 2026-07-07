@@ -3,7 +3,7 @@ import { Bell, Calendar, Check, Mail, Mic, Plus, Sparkles } from "lucide-react";
 import type { PointerEvent } from "react";
 
 /**
- * Hero visual  a 3D-perspective phone mockup running the Aria WhatsApp chat,
+ * Hero visual  a 3D-perspective phone mockup running the Musaed WhatsApp chat,
  * surrounded by floating "action" chips that show what the assistant just did.
  * Tilts with the pointer (parallax) and floats gently; both are disabled under
  * reduced-motion. Pure CSS/transform 3D  no WebGL bundle.
@@ -127,7 +127,7 @@ export function HeroDevice() {
                 <Sparkles className="h-4 w-4 text-white" />
               </span>
               <div className="leading-tight">
-                <div className="text-sm font-semibold text-white">Aria</div>
+                <div className="text-sm font-semibold text-white">Musaed</div>
                 <div className="flex items-center gap-1 text-[10px] text-emerald-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> online
                 </div>

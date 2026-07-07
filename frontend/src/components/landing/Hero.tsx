@@ -28,13 +28,13 @@ export function Hero() {
 
           <Reveal delay={0.06}>
             <h1 className="mt-5 text-4xl font-bold leading-[1.05] sm:text-6xl">
-              Meet <GradientText>Aria</GradientText>  the AI that runs your day.
+              Meet <GradientText>Musaed</GradientText>  the AI that runs your day.
             </h1>
           </Reveal>
 
           <Reveal delay={0.12}>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-slate-300 lg:mx-0">
-              Chat or send a voice note. Aria manages your calendar, reminders, email and
+              Chat or send a voice note. Musaed manages your calendar, reminders, email and
               meetings  right inside WhatsApp. No new app to learn.
             </p>
           </Reveal>

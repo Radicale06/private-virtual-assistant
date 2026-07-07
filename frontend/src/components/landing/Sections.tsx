@@ -79,12 +79,12 @@ const STEPS = [
   {
     icon: QrCode,
     title: "Scan the QR code",
-    body: "Link your phone to Aria's WhatsApp number. No new app to install.",
+    body: "Link your phone to Musaed's WhatsApp number. No new app to install.",
   },
   {
     icon: MessageCircle,
     title: "Just talk",
-    body: "Text or send a voice note. Aria takes the action and confirms  instantly.",
+    body: "Text or send a voice note. Musaed takes the action and confirms  instantly.",
   },
 ];
 
@@ -151,7 +151,7 @@ const FEATURES: Feature[] = [
   {
     icon: Mic,
     title: "Voice-first",
-    body: "Send a voice note  Aria transcribes and acts on it. Perfect on the move.",
+    body: "Send a voice note  Musaed transcribes and acts on it. Perfect on the move.",
     className: "md:col-span-2",
     tint: "from-indigo-500/20",
   },
@@ -324,7 +324,7 @@ export function Pricing() {
       <SectionHead
         label="Pricing"
         title={<>Simple pricing, <GradientText>cancel anytime</GradientText></>}
-        sub="Start free. Upgrade when Aria becomes indispensable."
+        sub="Start free. Upgrade when Musaed becomes indispensable."
       />
       <Stagger className="mx-auto mt-16 grid max-w-5xl items-stretch gap-6 md:grid-cols-3">
         {PLANS.map((p) => (
@@ -390,7 +390,7 @@ export function FinalCTA() {
               Your day, <GradientText>on autopilot</GradientText>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-slate-300">
-              Set Aria up in two minutes and start delegating from your favorite chat app today.
+              Set Musaed up in two minutes and start delegating from your favorite chat app today.
             </p>
             <Link
               to={user ? roleHome(user.role) : "/register"}

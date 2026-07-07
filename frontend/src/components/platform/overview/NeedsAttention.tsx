@@ -1,5 +1,6 @@
 import { CreditCard, Layers, MessageCircle, Plug, type LucideIcon } from "lucide-react";
 import { Card } from "../../ui/Card";
+import { SampleTag } from "../../ui/SampleTag";
 import { cn } from "../../../lib/cn";
 import { SAMPLE } from "./sampleData";
 
@@ -19,6 +20,7 @@ export function NeedsAttention() {
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-danger text-xs font-semibold text-primary-foreground">
           {items.length}
         </span>
+        <SampleTag className="ml-auto" />
       </div>
 
       <div className="flex flex-col gap-2">

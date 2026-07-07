@@ -9,7 +9,6 @@ import {
   LogOut,
   type LucideIcon,
   Settings,
-  Sparkles,
   User,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -78,11 +77,15 @@ export function AppSidebar({
   return (
     <aside className="flex w-[220px] shrink-0 flex-col border-r border-border bg-sidebar">
       {/* brand */}
-      <div className="flex items-center gap-2 border-b border-border px-5 py-5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-          <Sparkles className="h-[15px] w-[15px] text-primary-foreground" />
-        </div>
-        <span className="font-headings text-lg font-semibold text-foreground">Aria</span>
+      <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+        <img
+          src="/logos/Musaed.png"
+          alt="Musaed"
+          className="h-11 w-11 shrink-0 object-contain"
+        />
+        <span className="font-headings text-xl font-semibold tracking-tight text-foreground">
+          Musaed
+        </span>
       </div>
 
       {/* user chip */}

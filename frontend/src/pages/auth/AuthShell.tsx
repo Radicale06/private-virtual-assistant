@@ -46,7 +46,7 @@ export function AuthShell({
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-400">
               <Sparkles className="h-[18px] w-[18px] text-white" />
             </span>
-            <span className="font-display text-xl font-semibold text-white">Aria</span>
+            <span className="font-display text-xl font-semibold text-white">Musaed</span>
           </a>
 
           <div className="max-w-md">
@@ -92,7 +92,7 @@ export function AuthShell({
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-cyan-400">
               <Sparkles className="h-4 w-4 text-white" />
             </span>
-            <span className="font-display text-lg font-semibold text-white">Aria</span>
+            <span className="font-display text-lg font-semibold text-white">Musaed</span>
           </a>
 
           <div className="relative">

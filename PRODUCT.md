@@ -21,7 +21,7 @@ and system status. Their context is a back-office console; the job is to catch p
 
 ## Product Purpose
 
-PVA ("Aria") is a private AI assistant that lives on a single shared WhatsApp number. Each
+PVA ("Musaed") is a private AI assistant that lives on a single shared WhatsApp number. Each
 customer configures **one** assistant, connects their productivity accounts (Google Calendar &
 Gmail, Microsoft Outlook & Teams, Calendly, Zoom), links their phone by scanning a QR code,
 and from then on simply *talks* to it — by text or voice note — to manage their calendar,

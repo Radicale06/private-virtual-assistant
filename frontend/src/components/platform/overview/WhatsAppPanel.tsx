@@ -1,8 +1,11 @@
 import { MessageCircle } from "lucide-react";
 import { Badge } from "../../ui/Badge";
 import { Card } from "../../ui/Card";
+import { SampleTag } from "../../ui/SampleTag";
 import { Sparkline } from "../../ui/Sparkline";
 import { SAMPLE } from "./sampleData";
+
+const DELIVERY_THRESHOLD = 95;
 
 function Stat({
   label,
@@ -41,15 +44,22 @@ function Stat({
 
 export function WhatsAppPanel({ linkedNumbers }: { linkedNumbers: number }) {
   const w = SAMPLE.whatsapp;
+  // Header status must agree with the metrics below it — a green "Healthy" badge
+  // over a sub-threshold delivery rate is a contradiction the operator can't trust.
+  const degraded = w.deliverySuccess < DELIVERY_THRESHOLD;
+
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageCircle className="h-[18px] w-[18px] text-success" />
+          <MessageCircle
+            className={degraded ? "h-[18px] w-[18px] text-warning" : "h-[18px] w-[18px] text-success"}
+          />
           <h3 className="text-base font-semibold text-foreground">WhatsApp Number</h3>
+          <SampleTag />
         </div>
-        <Badge tone="success" dot>
-          Healthy
+        <Badge tone={degraded ? "warning" : "success"} dot>
+          {degraded ? "Degraded" : "Healthy"}
         </Badge>
       </div>
 
@@ -59,8 +69,8 @@ export function WhatsAppPanel({ linkedNumbers }: { linkedNumbers: number }) {
           label="Delivery success"
           value={String(w.deliverySuccess)}
           unit="%"
-          sub="↓ Below 95% threshold"
-          subTone="warning"
+          sub={degraded ? `↓ Below ${DELIVERY_THRESHOLD}% threshold` : "Above threshold"}
+          subTone={degraded ? "warning" : "muted"}
         />
         <Stat
           label="24h window used"
@@ -71,7 +81,7 @@ export function WhatsAppPanel({ linkedNumbers }: { linkedNumbers: number }) {
       </div>
 
       <div className="mt-4">
-        <div className="text-xs text-muted-foreground">Delivery rate  12h</div>
+        <div className="text-xs text-muted-foreground">Delivery rate — 12h</div>
         <Sparkline data={SAMPLE.trends.whatsappDelivery} color="var(--color-success)" />
       </div>
     </Card>

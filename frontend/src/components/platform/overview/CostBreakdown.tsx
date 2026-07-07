@@ -1,13 +1,17 @@
 import { Card } from "../../ui/Card";
 import { ProgressBar } from "../../ui/ProgressBar";
+import { SampleTag } from "../../ui/SampleTag";
 import { SAMPLE } from "./sampleData";
 
 export function CostBreakdown() {
   const c = SAMPLE.costBreakdown;
   return (
     <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Cost Breakdown  Today</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground">Cost Breakdown — Today</h3>
+          <SampleTag />
+        </div>
         <span className="text-lg font-semibold text-foreground">${c.total.toFixed(2)}</span>
       </div>
 
@@ -15,7 +19,14 @@ export function CostBreakdown() {
         {c.rows.map((row) => (
           <div key={row.label}>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-foreground">{row.label}</span>
+              <span className="flex items-center gap-2 text-foreground">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: row.color }}
+                  aria-hidden="true"
+                />
+                {row.label}
+              </span>
               <span className="text-muted-foreground">
                 ${row.value.toFixed(2)} <span className="text-xs">({row.pct}%)</span>
               </span>

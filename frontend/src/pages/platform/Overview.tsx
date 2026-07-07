@@ -1,9 +1,9 @@
 import {
   AlertTriangle,
   Bot,
-  ChevronDown,
+  CalendarDays,
+  Check,
   CreditCard,
-  Link2,
   MessageSquare,
   RefreshCw,
   Users,
@@ -16,6 +16,7 @@ import { SystemHealthPanel } from "../../components/platform/overview/SystemHeal
 import { UsersTable } from "../../components/platform/overview/UsersTable";
 import { WhatsAppPanel } from "../../components/platform/overview/WhatsAppPanel";
 import { Card } from "../../components/ui/Card";
+import { SampleTag } from "../../components/ui/SampleTag";
 import { Sparkline } from "../../components/ui/Sparkline";
 import { StatCard } from "../../components/ui/StatCard";
 import { adminApi } from "../../lib/api";
@@ -25,6 +26,10 @@ import type {
   SystemHealth,
   WhatsAppStatus,
 } from "../../lib/types";
+
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background";
+const PRESS = "transition active:scale-[0.97] motion-reduce:active:scale-100";
 
 function TrendCard({
   label,
@@ -45,9 +50,12 @@ function TrendCard({
 }) {
   return (
     <Card className="p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{range}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <span className="truncate">{label}</span>
+          <SampleTag />
+        </span>
+        <span className="shrink-0 text-xs text-muted-foreground">{range}</span>
       </div>
       <div className="mt-1 flex items-baseline gap-2">
         <span className="text-xl font-semibold text-foreground">{value}</span>
@@ -74,7 +82,11 @@ export function Overview() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [whatsapp, setWhatsapp] = useState<WhatsAppStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped on every successful load; keys the transient "Updated" confirmation
+  // so it replays on each refresh.
+  const [refreshCount, setRefreshCount] = useState(0);
 
   const load = useCallback(async (q?: string) => {
     setLoading(true);
@@ -90,11 +102,13 @@ export function Overview() {
       setUsers(us);
       setHealth(hl);
       setWhatsapp(wa);
+      setRefreshCount((n) => n + 1);
     } catch (e) {
-      // Backend not reachable / not authed  fall through to sample-only view.
+      // Backend not reachable / not authed — fall through to sample-only view.
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
   }, []);
 
@@ -102,6 +116,9 @@ export function Overview() {
     void load();
   }, [load]);
 
+  // First paint, before any response: skeleton the live (backend-backed) values
+  // rather than flashing sample numbers as if they were real.
+  const firstLoad = loading && !loaded;
   const t = SAMPLE.trends;
 
   return (
@@ -114,49 +131,61 @@ export function Overview() {
             Real-time health, usage, and revenue across all tenants.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm text-secondary-foreground">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" />
             Last 12 days
-            <ChevronDown className="h-4 w-4" />
-          </button>
+          </span>
+          {refreshCount > 0 && !loading && !error && (
+            <span
+              key={refreshCount}
+              className="anim-confirm flex items-center gap-1 text-xs font-medium text-success"
+              role="status"
+            >
+              <Check className="h-3.5 w-3.5" />
+              Updated
+            </span>
+          )}
           <button
             onClick={() => void load()}
-            className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            disabled={loading}
+            className={`flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 ${PRESS} ${FOCUS_RING}`}
           >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing" : "Refresh"}
           </button>
         </div>
       </div>
 
       {error && (
-        <Card className="border-warning/30 bg-warning-muted px-4 py-2.5 text-sm text-warning">
-          Live data unavailable ({error})  showing sample values. Sign in as an admin
+        <Card className="anim-settle border-warning/40 bg-warning-muted px-4 py-2.5 text-sm text-warning">
+          Live data unavailable ({error}) — showing sample values. Sign in as an admin
           and ensure the API is running.
         </Card>
       )}
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Total users" value={fmt(overview?.total_users, "1,284")} delta="+42" icon={Users} />
-        <StatCard label="Active agents" value={fmt(overview?.active_agents, "1,101")} delta="+18" icon={Bot} />
+      {/* KPI row — current-state scalars. Live values skeleton on first load;
+          revenue and error-rate are still placeholder, so they're marked. */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+        <StatCard label="Total users" value={fmt(overview?.total_users, "1,284")} delta="+42" icon={Users} loading={firstLoad} />
+        <StatCard label="Active agents" value={fmt(overview?.active_agents, "1,101")} delta="+18" icon={Bot} loading={firstLoad} />
         <StatCard
           label="Messages today"
           value={fmt(overview?.messages_today, "8,412")}
           delta="+12%"
           icon={MessageSquare}
+          loading={firstLoad}
         />
-        <StatCard label="LLM cost today" value="$38.20" delta="+5%" deltaTone="danger" icon={Link2} />
-        <StatCard label="MRR" value="$14,880" delta="+3.2%" icon={CreditCard} highlight />
-        <StatCard label="Error rate" value="0.8%" delta="-0.3%" icon={AlertTriangle} />
+        <StatCard label="MRR" value="$14,880" delta="+3.2%" icon={CreditCard} highlight sample />
+        <StatCard label="Error rate" value="0.8%" delta="-0.3%" deltaTone="success" icon={AlertTriangle} sample />
       </div>
 
-      {/* trend row */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <TrendCard label="Messages over time" value="118K" delta="+8.4%" deltaTone="success" range="Last 12 days" data={t.messages} color="var(--color-primary)" />
-        <TrendCard label="LLM cost over time" value="$38.20" delta="+5.1%" deltaTone="danger" range="Today" data={t.cost} color="var(--color-warning)" />
-        <TrendCard label="New signups" value="15 today" delta="+50%" deltaTone="success" range="Last 12 days" data={t.signups} color="var(--color-success)" />
-        <TrendCard label="Error rate" value="0.8%" delta="-0.3%" deltaTone="success" range="Last 12 days" data={t.errors} color="var(--color-danger)" />
+      {/* trend row — time-series. Disjoint from the KPI scalars above (no metric
+          printed twice); all series are placeholder until endpoints exist. */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <TrendCard label="Messages" value="118K" delta="+8.4%" deltaTone="success" range="12 days" data={t.messages} color="var(--color-chart-1)" />
+        <TrendCard label="LLM cost" value="$38.20" delta="+5.1%" deltaTone="danger" range="12 days" data={t.cost} color="var(--color-chart-2)" />
+        <TrendCard label="New signups" value="118 total" delta="+50%" deltaTone="success" range="12 days" data={t.signups} color="var(--color-chart-3)" />
       </div>
 
       {/* whatsapp + needs attention */}
@@ -170,17 +199,13 @@ export function Overview() {
       </div>
 
       {/* users */}
-      <UsersTable users={users} onSearch={(q) => void load(q)} />
+      <UsersTable users={users} loading={firstLoad} onSearch={(q) => void load(q)} />
 
       {/* system health + cost */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SystemHealthPanel health={health} />
         <CostBreakdown />
       </div>
-
-      {loading && (
-        <p className="text-center text-xs text-muted-foreground">Refreshing…</p>
-      )}
     </div>
   );
 }

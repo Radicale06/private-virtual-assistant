@@ -6,6 +6,8 @@ import { AuthProvider } from "./lib/auth";
 import { Landing } from "./pages/landing/Landing";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
+import { Terms } from "./pages/legal/Terms";
+import { Privacy } from "./pages/legal/Privacy";
 import { Activity } from "./pages/app/Activity";
 import { Billing } from "./pages/app/Billing";
 import { Home } from "./pages/app/Home";
@@ -32,6 +34,10 @@ export function App() {
         <Routes>
           {/* Public marketing landing */}
           <Route path="/" element={<Landing />} />
+
+          {/* Public legal pages (also used by the Google OAuth consent screen) */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           {/* Public */}
           <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
