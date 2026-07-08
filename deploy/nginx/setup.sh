@@ -68,9 +68,13 @@ fi
 mkdir -p "$WEBROOT" "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
 # --------------------------------------------------------- 3. dhparam --------
-if [ ! -f "$DHPARAM" ]; then
-  log "Generating DH parameters (2048-bit, one-time, ~30s)…"
-  openssl dhparam -out "$DHPARAM" 2048 >/dev/null 2>&1
+# Validate, don't just check existence — an interrupted run can leave a
+# truncated file. Generate to a temp path and move it into place atomically, so
+# a Ctrl-C never leaves a broken dhparam.pem that nginx refuses to load.
+if ! openssl dhparam -in "$DHPARAM" -check -noout >/dev/null 2>&1; then
+  log "Generating DH parameters (2048-bit, one-time, ~30s — do not interrupt)…"
+  openssl dhparam -out "$DHPARAM.tmp" 2048 >/dev/null 2>&1
+  mv -f "$DHPARAM.tmp" "$DHPARAM"
 fi
 
 # ----------------------------------------------------- 4. copy configs -------
