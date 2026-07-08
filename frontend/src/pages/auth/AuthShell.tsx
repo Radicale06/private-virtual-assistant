@@ -1,5 +1,6 @@
 import { Bell, Calendar, Eye, EyeOff, Mic, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { authApi } from "../../lib/api";
 import "../landing/landing.css";
 
 const BULLETS = [
@@ -207,25 +208,21 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-/** Social sign-in row + "or" divider. Google auth isn't wired server-side yet,
- *  so it shows a brief "coming soon" note instead of faking a flow. */
+/** Social sign-in row + "or" divider. Redirects to the backend, which bounces to
+ *  Google's consent screen and returns to /auth/callback with a session token. */
 export function SocialAuth() {
-  const [note, setNote] = useState(false);
   return (
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => setNote(true)}
+        onClick={() => {
+          window.location.href = authApi.googleSignInUrl();
+        }}
         className="flex items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.04] py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
       >
         <GoogleIcon className="h-4 w-4" />
         Continue with Google
       </button>
-      {note && (
-        <p className="text-center text-xs text-slate-400">
-          Google sign-in is coming soon — use your email below for now.
-        </p>
-      )}
       <div className="flex items-center gap-3 text-xs text-slate-500">
         <span className="h-px flex-1 bg-white/10" />
         or

@@ -19,6 +19,8 @@ interface AuthContextValue {
   loading: boolean; // true while the initial session check is in flight
   login: (email: string, password: string) => Promise<UserMe>;
   register: (payload: RegisterPayload) => Promise<UserMe>;
+  /** Adopt a token minted by an external flow (e.g. Google sign-in callback). */
+  applySession: (token: string) => Promise<UserMe>;
   logout: () => void;
 }
 
@@ -60,6 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return me;
   }, []);
 
+  const applySession = useCallback(async (token: string) => {
+    setToken(token);
+    const me = await api.me();
+    setUser(me);
+    return me;
+  }, []);
+
   const logout = useCallback(() => {
     clearToken();
     setUser(null);
@@ -77,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, applySession, logout }}>
       {children}
     </AuthContext.Provider>
   );

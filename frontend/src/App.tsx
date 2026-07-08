@@ -6,6 +6,7 @@ import { AuthProvider } from "./lib/auth";
 import { Landing } from "./pages/landing/Landing";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
+import { AuthCallback } from "./pages/auth/AuthCallback";
 import { Terms } from "./pages/legal/Terms";
 import { Privacy } from "./pages/legal/Privacy";
 import { Activity } from "./pages/app/Activity";
@@ -42,6 +43,8 @@ export function App() {
           {/* Public */}
           <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
           <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+          {/* Google sign-in redirect target (adopts the JWT, then routes home) */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Authenticated */}
           <Route element={<RequireAuth />}>

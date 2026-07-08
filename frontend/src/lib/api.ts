@@ -84,6 +84,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const authApi = {
+  // Full-page redirect to the backend, which bounces to Google's consent screen.
+  googleSignInUrl: (): string => `${BASE_URL}/api/auth/google/start`,
   // Backend login uses OAuth2PasswordRequestForm → form-encoded, not JSON.
   login: async (email: string, password: string): Promise<TokenResponse> => {
     const body = new URLSearchParams();
