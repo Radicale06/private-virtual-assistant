@@ -1,0 +1,21 @@
+# =============================================================================
+# Musaed — frontend stack (Vite dev server). Host-nginx proxies musaed.pro →
+# 127.0.0.1:13000. The SPA calls the backend over the public API URL, so this
+# stack needs no shared network with the backend.
+#
+# Run from the repo root with ./start-all.sh, or directly:
+#   docker compose -f frontend/docker-compose.yml up -d --build
+# =============================================================================
+name: musaed-frontend
+
+services:
+  frontend:
+    build: .
+    environment:
+      # Public API base the SPA calls. Override by exporting VITE_API_BASE_URL.
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.musaed.pro}
+    ports:
+      - "127.0.0.1:13000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules

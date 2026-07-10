@@ -1,7 +1,7 @@
 # Musaed — nginx + SSL deployment
 
 Host-level nginx reverse-proxies HTTPS traffic to the Docker containers
-(`docker-compose.yml`), and Let's Encrypt provides the certificates.
+(`backend/docker-compose.yml` + `frontend/docker-compose.yml`), and Let's Encrypt provides the certificates.
 
 ```
 deploy/nginx/
@@ -53,7 +53,7 @@ Verify renewal: `sudo certbot renew --dry-run`.
 
 These live outside nginx but the deployment won't be correct without them.
 
-**a) Container ports (already configured).** `docker-compose.yml` publishes on
+**a) Container ports (already configured).** The compose files publish on
 `127.0.0.1` using a project-specific port range chosen to avoid collisions with
 other services on the VPS, so nothing is exposed to the public internet —
 host-nginx reaches them on localhost:
@@ -76,7 +76,7 @@ bundle (`npm run build`) and either serve it from a prod image or point nginx's
 `root` at `dist/` (commented alternative in `musaed.pro`).
 
 **c) Trust the proxy in uvicorn (already configured).** The backend command in
-`docker-compose.yml` runs uvicorn with `--proxy-headers --forwarded-allow-ips='*'`
+`backend/docker-compose.yml` runs uvicorn with `--proxy-headers --forwarded-allow-ips='*'`
 so FastAPI sees the original HTTPS scheme/host — needed for correct redirects and
 Twilio webhook signature validation.
 

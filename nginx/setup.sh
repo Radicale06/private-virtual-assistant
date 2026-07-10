@@ -25,7 +25,7 @@ NGINX_ENABLED="/etc/nginx/sites-enabled"
 WEBROOT="/var/www/certbot"
 DHPARAM="/etc/nginx/dhparam.pem"
 
-# Site config files (in ./sites-available) to install + enable.
+# Site config files (beside this script) to install + enable.
 SITES=(musaed.pro api.musaed.pro)
 
 # Certificate groups — "live-name:comma,separated,domains".
@@ -80,7 +80,7 @@ fi
 # ----------------------------------------------------- 4. copy configs -------
 log "Installing site configs…"
 for s in "${SITES[@]}"; do
-  cp -f "$SCRIPT_DIR/sites-available/$s" "$NGINX_AVAILABLE/$s"
+  cp -f "$SCRIPT_DIR/$s" "$NGINX_AVAILABLE/$s"
 done
 
 # ------------------------------------------- 5. dummy certs (bootstrap) ------

@@ -1,14 +1,15 @@
 # =============================================================================
-# PVA / Musaed  full stack: postgres, redis, backend API, Celery worker & beat,
-# frontend. `docker compose up --build`.
+# Musaed — backend stack: postgres, redis, adminer, API, Celery worker & beat.
 #
-# Host-published ports are bound to 127.0.0.1 and use a project-specific range
-# (13000/15432/16379/18000/18080) so they don't collide with other services on
-# the VPS and aren't exposed to the public internet — host-nginx reaches them on
-# localhost and reverse-proxies HTTPS. Container-internal ports are unchanged, so
-# service-to-service traffic (postgres:5432, redis:6379) and DATABASE_URL/
-# REDIS_URL stay the same.
+# Run from the repo root with ./start-all.sh, or directly:
+#   docker compose -f backend/docker-compose.yml up -d --build
+#
+# Env is read from backend/.env (see env_file). Relative paths resolve against
+# this file's directory, so `.` = backend/. Host ports bind to 127.0.0.1 on a
+# project-specific range so host-nginx proxies them without public exposure or
+# collisions. Container-internal ports are unchanged (postgres:5432, redis:6379).
 # =============================================================================
+name: musaed-backend
 
 services:
   postgres:
@@ -37,9 +38,8 @@ services:
       timeout: 3s
       retries: 10
 
-  # Lightweight DB UI for inspecting Postgres. Localhost-only; reach it via an
-  # SSH tunnel:  ssh -L 18080:127.0.0.1:18080 user@server  → http://localhost:18080
-  # Login: System=PostgreSQL, Server=postgres, User/Password/DB from .env.
+  # Localhost-only DB UI. Reach via SSH tunnel:
+  #   ssh -L 18080:127.0.0.1:18080 user@server  → http://localhost:18080
   adminer:
     image: adminer:4
     depends_on:
@@ -52,7 +52,7 @@ services:
       ADMINER_DESIGN: dracula
 
   backend:
-    build: ./backend
+    build: .
     env_file: .env
     depends_on:
       postgres:
@@ -62,44 +62,32 @@ services:
     ports:
       - "127.0.0.1:18000:8000"
     volumes:
-      - ./backend:/app
-    # --proxy-headers + --forwarded-allow-ips lets uvicorn trust nginx's
-    # X-Forwarded-Proto/Host (correct https URLs + Twilio signature validation).
+      - .:/app
+    # --proxy-headers lets uvicorn trust nginx's X-Forwarded-Proto/Host
+    # (correct https URLs + Twilio webhook signature validation).
     command: >
       sh -c "prisma db push --skip-generate &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload"
 
   worker:
-    build: ./backend
+    build: .
     env_file: .env
     depends_on:
       - backend
       - redis
     volumes:
-      - ./backend:/app
+      - .:/app
     command: celery -A app.tasks.celery_app.celery_app worker --loglevel=info
 
   beat:
-    build: ./backend
+    build: .
     env_file: .env
     depends_on:
       - backend
       - redis
     volumes:
-      - ./backend:/app
+      - .:/app
     command: celery -A app.tasks.celery_app.celery_app beat --loglevel=info
-
-  frontend:
-    build: ./frontend
-    depends_on:
-      - backend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:18000}
-    ports:
-      - "127.0.0.1:13000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   pgdata:

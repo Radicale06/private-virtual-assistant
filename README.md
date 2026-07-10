@@ -36,22 +36,35 @@ on the user's behalf: creating events, setting reminders, summarizing email, sch
 
 ```
 PVA/
-├── docker-compose.yml        # postgres + redis + backend + worker + beat + frontend
-├── .env.example              # shared env for compose
-├── backend/                  # the full platform (this is where everything lives)
-│   ├── app/                  # application package (see backend/README.md)
+├── start-all.sh                  # build + start both stacks (backend then frontend)
+├── backend/
+│   ├── docker-compose.yml        # postgres, redis, adminer, API, worker, beat
+│   ├── .env.example              # copy to backend/.env, fill secrets
+│   ├── app/                      # application package (see backend/README.md)
 │   ├── requirements.txt
-│   ├── Dockerfile
-│   └── alembic/              # migrations
-└── frontend/                 # placeholder  drop the generated React app here
+│   └── Dockerfile
+├── frontend/
+│   ├── docker-compose.yml        # Vite dev server
+│   ├── .env.example              # VITE_API_BASE_URL
+│   └── ...                       # React/TypeScript app
+└── nginx/                        # host nginx site configs + setup.sh (Let's Encrypt)
 ```
+
+Each stack is its own compose project with its own `.env` — no shared root env.
 
 ## Quick start
 
 ```bash
-cp .env.example .env          # fill in secrets (OpenAI, WhatsApp, Google, Stripe…)
-docker compose up --build     # postgres, redis, backend API, worker, beat scheduler
-# API:   http://localhost:8000      Docs: http://localhost:8000/docs
+cp backend/.env.example backend/.env    # fill in secrets (OpenAI, Twilio, Google…)
+./start-all.sh                          # builds + starts backend + frontend stacks
+# API:  http://localhost:18000     Frontend:  http://localhost:13000
+```
+
+Or run a single stack directly:
+
+```bash
+docker compose -f backend/docker-compose.yml up -d --build
+docker compose -f frontend/docker-compose.yml up -d --build
 ```
 
 See [`backend/README.md`](backend/README.md) for the application-level architecture, the agent
