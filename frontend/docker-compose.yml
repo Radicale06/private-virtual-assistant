@@ -10,6 +10,7 @@ name: musaed-frontend
 
 services:
   frontend:
+    container_name: musaed-frontend
     build: .
     environment:
       # Public API base the SPA calls. Override by exporting VITE_API_BASE_URL.

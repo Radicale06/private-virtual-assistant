@@ -13,6 +13,7 @@ name: musaed-backend
 
 services:
   postgres:
+    container_name: musaed-postgres
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-pva}
@@ -29,6 +30,7 @@ services:
       retries: 10
 
   redis:
+    container_name: musaed-redis
     image: redis:7-alpine
     ports:
       - "127.0.0.1:16379:6379"
@@ -41,6 +43,7 @@ services:
   # Localhost-only DB UI. Reach via SSH tunnel:
   #   ssh -L 18080:127.0.0.1:18080 user@server  → http://localhost:18080
   adminer:
+    container_name: musaed-adminer
     image: adminer:4
     depends_on:
       postgres:
@@ -52,6 +55,7 @@ services:
       ADMINER_DESIGN: dracula
 
   backend:
+    container_name: musaed-backend
     build: .
     env_file: .env
     depends_on:
@@ -70,6 +74,7 @@ services:
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload"
 
   worker:
+    container_name: musaed-worker
     build: .
     env_file: .env
     depends_on:
@@ -80,6 +85,7 @@ services:
     command: celery -A app.tasks.celery_app.celery_app worker --loglevel=info
 
   beat:
+    container_name: musaed-beat
     build: .
     env_file: .env
     depends_on:
