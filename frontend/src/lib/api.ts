@@ -3,7 +3,10 @@
 import type {
   ActivityOut,
   AdminAgent,
+  AdminConversation,
   AdminOverview,
+  AdminRevenue,
+  AdminTemplate,
   AdminUser,
   AgentOut,
   AgentUpdate,
@@ -149,6 +152,9 @@ export const adminApi = {
   whatsapp: () => request<WhatsAppStatus>("/api/admin/whatsapp"),
   costs: () => request<CostSummary>("/api/admin/costs"),
   audit: () => request<AuditEntry[]>("/api/admin/audit"),
+  conversations: () => request<AdminConversation[]>("/api/admin/conversations"),
+  revenue: () => request<AdminRevenue>("/api/admin/revenue"),
+  templates: () => request<AdminTemplate[]>("/api/admin/templates"),
   suspendUser: (id: string) =>
     request(`/api/admin/users/${id}/suspend`, { method: "POST" }),
   activateUser: (id: string) =>

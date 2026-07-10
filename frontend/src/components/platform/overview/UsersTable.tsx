@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { AdminUser } from "../../../lib/types";
 import { Avatar } from "../../ui/Avatar";
 import { Badge } from "../../ui/Badge";
@@ -39,14 +40,6 @@ export function UsersTable({
     () => (plan === "all" ? users : users.filter((u) => u.plan === plan)),
     [users, plan],
   );
-
-  function impersonate(u: AdminUser) {
-    const ok = window.confirm(
-      `Impersonate ${u.email}? You'll act as this user until you switch back.`,
-    );
-    if (!ok) return;
-    // TODO: wire to the impersonation endpoint once it exists.
-  }
 
   return (
     <Card className="p-6">
@@ -144,18 +137,13 @@ export function UsersTable({
                     {new Date(u.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-2 py-3">
-                    <div className="flex justify-end gap-2">
-                      <button
+                    <div className="flex justify-end">
+                      <Link
+                        to="/platform/users"
                         className={`rounded-md border border-border px-3 py-1 text-xs font-medium text-secondary-foreground hover:bg-secondary ${PRESS} ${FOCUS_RING}`}
                       >
-                        View
-                      </button>
-                      <button
-                        onClick={() => impersonate(u)}
-                        className={`rounded-md border border-border px-3 py-1 text-xs font-medium text-secondary-foreground hover:bg-secondary ${PRESS} ${FOCUS_RING}`}
-                      >
-                        Impersonate
-                      </button>
+                        Manage
+                      </Link>
                     </div>
                   </td>
                 </tr>

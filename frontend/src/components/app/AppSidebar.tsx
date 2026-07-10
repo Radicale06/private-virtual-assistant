@@ -110,7 +110,7 @@ export function AppSidebar({
 
       <div className="flex flex-col gap-0.5 border-t border-border px-3 py-4">
         <a
-          href="https://docs.example.com"
+          href="mailto:support@musaed.pro"
           className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <HelpCircle className="h-[15px] w-[15px]" />

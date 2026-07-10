@@ -368,7 +368,6 @@ export function Home() {
             label="Reminders set"
             value={String(reminders.length)}
             icon={Bell}
-            highlight
           />
         </div>
 

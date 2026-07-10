@@ -115,11 +115,13 @@ export function SuperSidebar() {
 
       <div className="border-t border-border px-3 py-4">
         <a
-          href="https://docs.example.com"
+          href={`${import.meta.env.VITE_API_BASE_URL ?? ""}/docs`}
+          target="_blank"
+          rel="noreferrer"
           className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <HelpCircle className="h-[15px] w-[15px]" />
-          Documentation
+          API Docs
         </a>
       </div>
     </aside>

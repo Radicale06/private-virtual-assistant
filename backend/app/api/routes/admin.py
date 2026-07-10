@@ -10,10 +10,12 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.config import settings
 from app.constants import (
     AgentStatus,
     IntegrationStatus,
     JobStatus,
+    PlanTier,
     UserStatus,
 )
 from app.core.deps import Admin, Db
@@ -21,6 +23,9 @@ from app.schemas.schemas import AdminOverview, AdminUserOut
 from app.services.audit_service import record
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+# Monthly plan prices (USD). Keep in sync with the Stripe prices you sell.
+PLAN_PRICES = {PlanTier.free: 0, PlanTier.pro: 15, PlanTier.team: 49}
 
 
 @router.get("/overview", response_model=AdminOverview)
@@ -150,12 +155,36 @@ async def integrations_health(admin: Admin, db: Db) -> dict:
 
 @router.get("/costs")
 async def costs(admin: Admin, db: Db) -> dict:
-    since = datetime.now(timezone.utc) - timedelta(days=30)
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=30)
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     recent = await db.message.find_many(
         where={"created_at": {"gte": since}, "tokens": {"not": None}}, take=10000
     )
     total_tokens = sum((m.tokens or 0) for m in recent)
-    return {"window_days": 30, "messages": len(recent), "total_tokens": total_tokens}
+    cost_micros = sum((m.cost_usd_micros or 0) for m in recent)
+    cost_today_micros = sum(
+        (m.cost_usd_micros or 0) for m in recent if m.created_at >= start_of_day
+    )
+    return {
+        "window_days": 30,
+        "messages": len(recent),
+        "total_tokens": total_tokens,
+        "cost_usd": round(cost_micros / 1_000_000, 2),
+        "cost_usd_today": round(cost_today_micros / 1_000_000, 2),
+    }
+
+
+async def _redis_ok() -> bool:
+    try:
+        import redis.asyncio as aioredis
+
+        r = aioredis.from_url(settings.redis_url)
+        await r.ping()
+        await r.aclose()
+        return True
+    except Exception:
+        return False
 
 
 @router.get("/system/health")
@@ -166,6 +195,7 @@ async def system_health(admin: Admin, db: Db) -> dict:
         "integrations_errored": await db.agentintegration.count(
             where={"status": IntegrationStatus.error}
         ),
+        "redis_ok": await _redis_ok(),
     }
 
 
@@ -196,4 +226,71 @@ async def audit_log(admin: Admin, db: Db, limit: int = Query(100, le=500)) -> li
             "created_at": r.created_at.isoformat(),
         }
         for r in rows
+    ]
+
+
+@router.get("/conversations")
+async def conversations(
+    admin: Admin, db: Db, limit: int = Query(50, le=200)
+) -> list[dict]:
+    """Cross-tenant message stream — metadata only, never message bodies."""
+    rows = await db.message.find_many(
+        order={"created_at": "desc"},
+        take=limit,
+        include={"agent": {"include": {"user": True}}},
+    )
+    return [
+        {
+            "id": m.id,
+            "tenant": m.agent.user.email if m.agent and m.agent.user else None,
+            "direction": m.direction,
+            "type": m.type,
+            "role": m.role,
+            "created_at": m.created_at.isoformat(),
+        }
+        for m in rows
+    ]
+
+
+@router.get("/revenue")
+async def revenue(admin: Admin, db: Db) -> dict:
+    counts = {
+        plan: await db.user.count(where={"plan": plan}) for plan in PLAN_PRICES
+    }
+    total = sum(counts.values())
+    mrr = sum(PLAN_PRICES[plan] * n for plan, n in counts.items())
+    paying = sum(n for plan, n in counts.items() if plan != PlanTier.free)
+    plan_mix = [
+        {
+            "plan": plan,
+            "count": n,
+            "pct": round(n / total * 100) if total else 0,
+            "price": PLAN_PRICES[plan],
+        }
+        for plan, n in counts.items()
+    ]
+    return {
+        "mrr_usd": mrr,
+        "paying_users": paying,
+        "total_users": total,
+        "plan_mix": plan_mix,
+    }
+
+
+@router.get("/templates")
+async def templates(admin: Admin, db: Db) -> list[dict]:
+    """Twilio Content templates used for proactive sends (outside the 24h window)."""
+    return [
+        {
+            "name": "reminder",
+            "sid": settings.twilio_content_reminder or None,
+            "configured": bool(settings.twilio_content_reminder),
+            "purpose": "Proactive reminders outside the 24h session window",
+        },
+        {
+            "name": "morning_briefing",
+            "sid": settings.twilio_content_briefing or None,
+            "configured": bool(settings.twilio_content_briefing),
+            "purpose": "Daily morning briefing",
+        },
     ]

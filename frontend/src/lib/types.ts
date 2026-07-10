@@ -22,6 +22,7 @@ export interface SystemHealth {
   pending_jobs: number;
   failed_jobs: number;
   integrations_errored: number;
+  redis_ok: boolean;
 }
 
 export interface WhatsAppStatus {
@@ -34,6 +35,31 @@ export interface CostSummary {
   window_days: number;
   messages: number;
   total_tokens: number;
+  cost_usd: number;
+  cost_usd_today: number;
+}
+
+export interface AdminConversation {
+  id: string;
+  tenant: string | null;
+  direction: string;
+  type: string;
+  role: string;
+  created_at: string;
+}
+
+export interface AdminRevenue {
+  mrr_usd: number;
+  paying_users: number;
+  total_users: number;
+  plan_mix: { plan: string; count: number; pct: number; price: number }[];
+}
+
+export interface AdminTemplate {
+  name: string;
+  sid: string | null;
+  configured: boolean;
+  purpose: string;
 }
 
 export interface AdminAgent {
