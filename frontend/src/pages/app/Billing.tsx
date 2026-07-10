@@ -8,13 +8,6 @@ import { ProgressBar } from "../../components/ui/ProgressBar";
 import { api } from "../../lib/api";
 import type { BillingSummary } from "../../lib/types";
 
-// Invoice history isn't exposed by the backend yet  sample.
-const SAMPLE_INVOICES = [
-  { id: "INV-0042", date: "Jun 1, 2026", amount: "$12.00", status: "Paid" },
-  { id: "INV-0041", date: "May 1, 2026", amount: "$12.00", status: "Paid" },
-  { id: "INV-0040", date: "Apr 1, 2026", amount: "$12.00", status: "Paid" },
-];
-
 export function Billing() {
   const { me } = useApp();
   const [billing, setBilling] = useState<BillingSummary | null>(null);
@@ -32,8 +25,8 @@ export function Billing() {
     }
   }
 
-  const used = billing?.messages_used ?? 284;
-  const limit = billing?.limit ?? 500;
+  const used = billing?.messages_used ?? 0;
+  const limit = billing?.limit ?? 100;
 
   return (
     <>
@@ -49,7 +42,7 @@ export function Billing() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-foreground">Current plan</h3>
               <Badge tone="primary" className="capitalize">
-                {billing?.plan ?? "pro"}
+                {billing?.plan ?? "free"}
               </Badge>
             </div>
             <div className="mt-2">
@@ -88,32 +81,9 @@ export function Billing() {
         {/* invoices */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-foreground">Invoice history</h3>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse">
-              <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-2 py-3 font-medium">Invoice</th>
-                  <th className="px-2 py-3 font-medium">Date</th>
-                  <th className="px-2 py-3 font-medium">Amount</th>
-                  <th className="px-2 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SAMPLE_INVOICES.map((inv) => (
-                  <tr key={inv.id} className="border-b border-border last:border-0">
-                    <td className="px-2 py-3 text-sm font-medium text-foreground">{inv.id}</td>
-                    <td className="px-2 py-3 text-sm text-muted-foreground">{inv.date}</td>
-                    <td className="px-2 py-3 text-sm text-foreground">{inv.amount}</td>
-                    <td className="px-2 py-3">
-                      <Badge tone="success" dot>
-                        {inv.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            No invoices yet. Your billing history will appear here after your first payment.
+          </p>
         </Card>
       </main>
     </>

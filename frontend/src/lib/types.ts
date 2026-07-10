@@ -136,6 +136,13 @@ export interface BillingSummary {
   limit: number;
 }
 
+export interface DashboardStats {
+  messages_this_month: number;
+  ai_actions: number;
+  events_created: number;
+  last_active_at: string | null;
+}
+
 export interface LinkOut {
   token: string;
   wa_link: string;

@@ -11,6 +11,7 @@ import type {
   BillingSummary,
   ConnectUrl,
   CostSummary,
+  DashboardStats,
   IntegrationOut,
   IntegrationsHealth,
   LinkOut,
@@ -108,6 +109,7 @@ export const authApi = {
 
 export const api = {
   me: () => request<UserMe>("/api/auth/me"),
+  dashboard: () => request<DashboardStats>("/api/dashboard"),
   agent: () => request<AgentOut>("/api/agent"),
   updateAgent: (patch: AgentUpdate) =>
     request<AgentOut>("/api/agent", { method: "PATCH", body: JSON.stringify(patch) }),

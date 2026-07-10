@@ -2,20 +2,17 @@ import {
   Bell,
   Bot,
   Calendar,
-  CalendarPlus,
   Mail,
   MessageCircle,
   Mic,
   QrCode,
   SlidersHorizontal,
-  Video,
   Zap,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useApp } from "../../components/app/AppLayout";
 import { AppTopbar } from "../../components/app/AppTopbar";
-import { HOME_SAMPLE } from "../../components/app/home/sampleData";
 import { INTEGRATIONS } from "../../lib/integrations";
 import { KpiCard } from "../../components/app/home/KpiCard";
 import { Badge } from "../../components/ui/Badge";
@@ -26,10 +23,14 @@ import { cn } from "../../lib/cn";
 import type {
   ActivityOut,
   BillingSummary,
+  DashboardStats,
   IntegrationOut,
   LinkStatus,
   ReminderOut,
 } from "../../lib/types";
+
+// Soft display cap for the AI-actions usage bar (no hard backend limit).
+const AI_ACTION_LIMIT = 100;
 
 // ---------------------------------------------------------------- helpers
 function greeting(): string {
@@ -67,7 +68,7 @@ function timeAgo(iso: string): string {
 }
 
 const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; tone: string; bg: string }> = {
-  create_event: { icon: CalendarPlus, tone: "text-primary", bg: "bg-primary-muted" },
+  create_event: { icon: Calendar, tone: "text-primary", bg: "bg-primary-muted" },
   set_reminder: { icon: Bell, tone: "text-warning", bg: "bg-warning-muted" },
   send_email: { icon: Mail, tone: "text-primary", bg: "bg-primary-muted" },
   summarize_emails: { icon: Mail, tone: "text-primary", bg: "bg-primary-muted" },
@@ -79,12 +80,6 @@ function activityVisual(a: ActivityOut) {
   const tool = (a.payload?.tool as string) ?? (a.type === "voice" ? "voice" : "default");
   return ACTIVITY_ICONS[tool] ?? ACTIVITY_ICONS.default;
 }
-
-const AGENDA_ICONS: Record<string, { icon: LucideIcon; tone: string; bg: string }> = {
-  meet: { icon: Video, tone: "text-primary", bg: "bg-primary-muted" },
-  event: { icon: Calendar, tone: "text-success", bg: "bg-success-muted" },
-  email: { icon: Mail, tone: "text-warning", bg: "bg-warning-muted" },
-};
 
 function integrationStatus(status: string | undefined): {
   label: string;
@@ -99,9 +94,11 @@ function integrationStatus(status: string | undefined): {
 function AssistantBar({
   name,
   link,
+  lastActiveAt,
 }: {
   name: string;
   link: LinkStatus | null;
+  lastActiveAt: string | null;
 }) {
   const connected = link?.linked ?? false;
   return (
@@ -118,14 +115,15 @@ function AssistantBar({
             </Badge>
           </div>
           <div className="mt-0.5 text-sm text-muted-foreground">
-            {link?.phone_number ? `+${link.phone_number}` : ""} · Last active 2 minutes ago
+            {link?.phone_number ? `+${link.phone_number}` : "Not linked to WhatsApp"}
+            {lastActiveAt ? ` · Last active ${timeAgo(lastActiveAt)}` : ""}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <button className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary">
           <QrCode className="h-4 w-4" />
-          Re-link
+          {connected ? "Re-link" : "Link WhatsApp"}
         </button>
         <button className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
           <SlidersHorizontal className="h-4 w-4" />
@@ -137,30 +135,17 @@ function AssistantBar({
 }
 
 function AgendaCard() {
+  // Today's calendar events aren't exposed as a REST endpoint yet; once a
+  // /api/agenda (reading the connected calendar) exists, populate this.
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Today's Agenda</h3>
-        <span className="text-sm text-muted-foreground">{HOME_SAMPLE.agenda.length} events</span>
+        <span className="text-sm text-muted-foreground">0 events</span>
       </div>
-      <div className="mt-4 flex flex-col">
-        {HOME_SAMPLE.agenda.map((item, i) => {
-          const v = AGENDA_ICONS[item.kind];
-          const Icon = v.icon;
-          return (
-            <div
-              key={i}
-              className="flex items-center gap-4 border-b border-border py-3 last:border-0"
-            >
-              <span className="w-16 shrink-0 text-sm text-muted-foreground">{item.time}</span>
-              <span className={cn("flex h-8 w-8 items-center justify-center rounded-md", v.bg)}>
-                <Icon className={cn("h-[15px] w-[15px]", v.tone)} />
-              </span>
-              <span className="text-sm font-medium text-foreground">{item.title}</span>
-            </div>
-          );
-        })}
-      </div>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Nothing scheduled. Connect a calendar and your assistant will show your day here.
+      </p>
     </Card>
   );
 }
@@ -266,17 +251,21 @@ function IntegrationsCard({ integrations }: { integrations: IntegrationOut[] }) 
   );
 }
 
-function UsageCard({ billing }: { billing: BillingSummary | null }) {
-  const messagesUsed = billing?.messages_used ?? 284;
-  const messagesLimit = billing?.limit ?? 500;
-  const actionsUsed = HOME_SAMPLE.kpis.aiActions;
-  const actionsLimit = HOME_SAMPLE.aiActionLimit;
+function UsageCard({
+  billing,
+  aiActions,
+}: {
+  billing: BillingSummary | null;
+  aiActions: number;
+}) {
+  const messagesUsed = billing?.messages_used ?? 0;
+  const messagesLimit = billing?.limit ?? 100;
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Usage</h3>
         <Badge tone="primary" className="capitalize">
-          {billing?.plan ?? "pro"}
+          {billing?.plan ?? "free"}
         </Badge>
       </div>
 
@@ -294,10 +283,10 @@ function UsageCard({ billing }: { billing: BillingSummary | null }) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground">AI Actions</span>
             <span className="text-muted-foreground">
-              {actionsUsed} / {actionsLimit}
+              {aiActions} / {AI_ACTION_LIMIT}
             </span>
           </div>
-          <ProgressBar value={(actionsUsed / actionsLimit) * 100} className="mt-2 h-2" />
+          <ProgressBar value={(aiActions / AI_ACTION_LIMIT) * 100} className="mt-2 h-2" />
         </div>
       </div>
 
@@ -316,6 +305,7 @@ export function Home() {
   const [activity, setActivity] = useState<ActivityOut[]>([]);
   const [integrations, setIntegrations] = useState<IntegrationOut[]>([]);
   const [billing, setBilling] = useState<BillingSummary | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [agentName, setAgentName] = useState("Musaed");
   const [error, setError] = useState<string | null>(null);
 
@@ -327,27 +317,27 @@ export function Home() {
       api.activity(),
       api.integrations(),
       api.billing(),
-    ]).then(([ag, ln, rm, ac, ig, bl]) => {
+      api.dashboard(),
+    ]).then(([ag, ln, rm, ac, ig, bl, st]) => {
       if (ag.status === "fulfilled") setAgentName(ag.value.name);
       if (ln.status === "fulfilled") setLink(ln.value);
       if (rm.status === "fulfilled") setReminders(rm.value);
       if (ac.status === "fulfilled") setActivity(ac.value);
       if (ig.status === "fulfilled") setIntegrations(ig.value);
       if (bl.status === "fulfilled") setBilling(bl.value);
-      if ([ag, ln, rm, ac, ig, bl].every((r) => r.status === "rejected")) {
-        setError("Live data unavailable  showing sample values.");
+      if (st.status === "fulfilled") setStats(st.value);
+      if ([ag, ln, rm, ac, ig, bl, st].every((r) => r.status === "rejected")) {
+        setError("Couldn't reach the server — some data may be missing.");
       }
     });
   }, []);
-
-  const name = me?.full_name ?? "Alex Johnson";
 
   return (
     <>
       <AppTopbar
         title={`${greeting()}, ${firstName(me?.full_name)} 👋`}
         subtitle="Here's what your assistant is working on today."
-        userName={name}
+        userName={me?.full_name ?? me?.email ?? "You"}
       />
 
       <main className="flex flex-1 flex-col gap-6 px-8 py-7">
@@ -361,33 +351,29 @@ export function Home() {
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <KpiCard
             label="Messages this month"
-            value={String(billing?.messages_used ?? 284)}
-            delta={HOME_SAMPLE.kpis.messagesDelta}
+            value={String(stats?.messages_this_month ?? 0)}
             icon={MessageCircle}
           />
           <KpiCard
             label="AI Actions taken"
-            value={String(HOME_SAMPLE.kpis.aiActions)}
-            delta={HOME_SAMPLE.kpis.aiActionsDelta}
+            value={String(stats?.ai_actions ?? 0)}
             icon={Zap}
           />
           <KpiCard
             label="Events created"
-            value={String(HOME_SAMPLE.kpis.events)}
-            delta={HOME_SAMPLE.kpis.eventsDelta}
+            value={String(stats?.events_created ?? 0)}
             icon={Calendar}
           />
           <KpiCard
             label="Reminders set"
-            value={String(reminders.length || 8)}
-            delta={HOME_SAMPLE.kpis.remindersDelta}
+            value={String(reminders.length)}
             icon={Bell}
             highlight
           />
         </div>
 
         {/* assistant status */}
-        <AssistantBar name={agentName} link={link} />
+        <AssistantBar name={agentName} link={link} lastActiveAt={stats?.last_active_at ?? null} />
 
         {/* two-column */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -402,7 +388,7 @@ export function Home() {
         </div>
 
         {/* usage */}
-        <UsageCard billing={billing} />
+        <UsageCard billing={billing} aiActions={stats?.ai_actions ?? 0} />
       </main>
     </>
   );

@@ -9,6 +9,7 @@ from app.api.routes import (
     agents,
     auth,
     billing,
+    dashboard,
     integrations,
     memory,
     reminders,
@@ -23,5 +24,6 @@ api_router.include_router(reminders.router)
 api_router.include_router(activity.router)
 api_router.include_router(memory.router)
 api_router.include_router(billing.router)
+api_router.include_router(dashboard.router)
 api_router.include_router(webhook.router)
 api_router.include_router(admin.router)
